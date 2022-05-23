@@ -12,9 +12,9 @@ function bundleHTML() {
     readHTMLStream.on('end', async () => {
         const components = await fsProm.readdir(path.resolve(__dirname, 'components'))
         for (const component of components) {
-        if (path.parse(__dirname + '\\components\\' + component).ext == '.html'){
-           let fragment =  path.parse(__dirname + '\\components\\' + component).name
-            const componentReadStream = await fsProm.readFile(__dirname + '\\components\\' + component, 'utf8')
+        if (path.parse(__dirname + '/components/' + component).ext == '.html'){
+           let fragment =  path.parse(__dirname + '/components/' + component).name
+            const componentReadStream = await fsProm.readFile(__dirname + '/components/' + component, 'utf8')
             const componentRegex = new RegExp(`{{${fragment}}}`)
             htmlTemplate = htmlTemplate.replace(componentRegex, componentReadStream)
             
@@ -36,9 +36,7 @@ function bundleHTML() {
     bundleProject()
     }
     else {
-      await fs.rmdir(destDir, { recursive: true }, (err) => {
-          if (err) console.log(err)
-      })
+      await fsProm.rm(destDir, { recursive: true })
       await fsProm.mkdir(destDir, { recursive: true })
     //   Или здесь проект пересобирать
         bundleProject()
@@ -46,7 +44,7 @@ function bundleHTML() {
   })
 
   //   Собираем стили в бандл
-const stylesSrcDir = path.join(__dirname, 'styles\\')
+const stylesSrcDir = path.join(__dirname, 'styles/')
   
 async function bundleCSS(src) {
     let stylesArr = []
