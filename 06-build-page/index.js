@@ -7,6 +7,7 @@ const path = require('path')
 function bundleHTML() {
     let readHTMLStream = fs.createReadStream(path.resolve(__dirname, 'template.html'), 'utf-8')
     let htmlTemplate = ''
+    const writeHTMLStream = fs.createWriteStream(path.resolve(destDir, 'index.html'))
     readHTMLStream.on('data', (chunk) => htmlTemplate += chunk)
     readHTMLStream.on('end', async () => {
         const components = await fsProm.readdir(path.resolve(__dirname, 'components'))
@@ -19,23 +20,50 @@ function bundleHTML() {
             
             console.log('html готов. Вроде бы...')
         }   
-     }
+    }
+    writeHTMLStream.write(htmlTemplate, 'utf-8')
     })
   }
 
   // Так, теперь папка где будем собирать проект
 
-  const srcDir = path.join(__dirname)
   const destDir = path.join(__dirname, 'project-dist')
 
   fs.access(destDir, async (err) => {
     if (err) {
       await fsProm.mkdir(destDir)
     //   Здесь потом будет собирать проект
+    bundleCSS(stylesSrcDir)
+    bundleHTML()
     }
     else {
-      await fsProm.rmdir(destDir, { recursive: true })
+      await fsProm.rmdir(destDir, { force: true, recursive: true })
       await fsProm.mkdir(destDir, { recursive: true })
     //   Или здесь проект пересобирать
+    bundleCSS(stylesSrcDir)
+    bundleHTML()
     }
   })
+
+  //   Собираем стили в бандл
+const stylesSrcDir = path.join(__dirname, 'styles\\')
+  
+async function bundleCSS(src) {
+    let stylesArr = []
+    const writeStream = fs.createWriteStream(path.join(destDir, 'style.css'))
+
+    const srcFiles = await fsProm.readdir(src)
+
+    for (const file of srcFiles) {
+        if (path.parse(src + file).ext == '.css') {
+            
+            const stylesFileRead = await fsProm.readFile(src + file, 'utf8')
+
+            stylesArr.unshift(stylesFileRead)
+        }
+    }
+
+    writeStream.write(stylesArr.join(''), "UTF8")
+    writeStream.end()
+}
+
