@@ -33,15 +33,15 @@ function bundleHTML() {
     if (err) {
       await fsProm.mkdir(destDir)
     //   Здесь потом будет собирать проект
-    bundleCSS(stylesSrcDir)
-    bundleHTML()
+    bundleProject()
     }
     else {
-      await fsProm.rmdir(destDir, { force: true, recursive: true })
+      await fs.rmdir(destDir, { recursive: true }, (err) => {
+          if (err) console.log(err)
+      })
       await fsProm.mkdir(destDir, { recursive: true })
     //   Или здесь проект пересобирать
-    bundleCSS(stylesSrcDir)
-    bundleHTML()
+        bundleProject()
     }
   })
 
@@ -67,3 +67,33 @@ async function bundleCSS(src) {
     writeStream.end()
 }
 
+// Копируем папку assets
+
+function copyFile(src, dest, file) {
+    fs.copyFile(path.join(src, file.name), path.join(dest, file.name), err => {
+        if (err) throw err
+    })
+      }
+
+function copyAllFiles (src, dest) {
+fs.mkdir(dest, (err) => {
+    if (err) throw err
+})
+fs.readdir(src, {withFileTypes: true}, (err, files) => {
+    files.forEach(file => {
+        if(file.isFile()) {
+            copyFile(src, dest, file)
+        } else {
+            copyAllFiles(path.join(src, file.name), path.join(dest, file.name))
+        }
+    })
+})
+}
+
+// Собираем весь проект в бандл
+
+function bundleProject() {
+    bundleHTML()
+    copyAllFiles(path.join(__dirname, 'assets'), path.join(destDir, 'assets'))
+    bundleCSS(stylesSrcDir)
+}
